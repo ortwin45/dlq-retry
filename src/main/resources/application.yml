@@ -1,0 +1,35 @@
+spring:
+  cloud:
+    stream:
+      function:
+        definition: mySingleInput;myBatchedInput
+      bindings:
+        mySingleInput-in-0:
+          destination: ortwin.test.mySingleInput
+          group: queue
+          consumer:
+            maxAttempts: 1
+            concurrency: 1
+        myBatchedInput-in-0:
+          destination: ortwin.test.myBatchedInput
+          group: queue
+          consumer:
+            batch-mode: true
+            maxAttempts: 1
+            concurrency: 1
+      rabbit:
+        bindings:
+          mySingleInput-in-0:
+            consumer:
+              autoBindDlq: true
+          myBatchedInput-in-0:
+            consumer:
+              autoBindDlq: true
+              max-concurrency: 1
+              receive-timeout: 10000
+              enable-batching: true
+              batch-size: 3
+              # Na 15s op de DLQ wordt de boodschap opnieuw op de originele queue gezet... FAIL
+              dlqTtl: 15000
+              # Deze parameter moet leeg zijn om terug te plaatsen naar originele queue
+              dlqDeadLetterExchange:
